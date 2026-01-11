@@ -22,11 +22,47 @@ export function RealSessionMonitorPage() {
   const [isMonitoring, setIsMonitoring] = useState(true)
   const [updateCount, setUpdateCount] = useState(0)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const [lastAssistantMessageCount, setLastAssistantMessageCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
 
   const client = getClient()
   const decodedPath = projectPath ? decodeURIComponent(projectPath) : ''
+
+  // Reproducir sonido de notificación
+  const playNotificationSound = () => {
+    try {
+      // Crear AudioContext si no existe
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+
+      const audioContext = audioContextRef.current
+      const now = audioContext.currentTime
+
+      // Crear oscilador para generar un tono
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      // Configurar tonos (timbre de notificación)
+      oscillator.frequency.setValueAtTime(800, now)
+      oscillator.frequency.setValueAtTime(1000, now + 0.1)
+
+      // Configurar volumen
+      gainNode.gain.setValueAtTime(0.3, now)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
+
+      // Reproducir
+      oscillator.start(now)
+      oscillator.stop(now + 0.2)
+    } catch (err) {
+      console.error('Error al reproducir sonido:', err)
+    }
+  }
 
   // Función de polling
   const pollMessages = async () => {
@@ -88,6 +124,18 @@ export function RealSessionMonitorPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Reproducir sonido cuando llega nuevo mensaje del asistente
+  useEffect(() => {
+    const assistantMessages = messages.filter(msg => msg.type === 'assistant')
+    const currentAssistantCount = assistantMessages.length
+
+    // Si hay nuevos mensajes del asistente desde la última verificación
+    if (currentAssistantCount > lastAssistantMessageCount) {
+      playNotificationSound()
+      setLastAssistantMessageCount(currentAssistantCount)
+    }
+  }, [messages, lastAssistantMessageCount])
 
   const toggleMonitoring = () => {
     setIsMonitoring(!isMonitoring)
