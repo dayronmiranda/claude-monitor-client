@@ -76,6 +76,11 @@ export function RealSessionMonitorPage() {
       if (res.success && res.data) {
         const newMessages = res.data as SessionMessage[]
         if (newMessages.length > 0) {
+          console.log(`[POLLING] Nuevos mensajes recibidos: ${newMessages.length}`)
+          console.log('[POLLING] Mensajes recibidos:', newMessages)
+          newMessages.forEach((msg, idx) => {
+            console.log(`  [MSG ${idx}] Tipo: ${msg.type}, Timestamp: "${msg.timestamp}", Tipo timestamp: ${typeof msg.timestamp}`)
+          })
           setMessages(prev => [...prev, ...newMessages])
           setLastLineIndex(prev => prev + newMessages.length)
           setUpdateCount(prev => prev + 1)
@@ -95,10 +100,21 @@ export function RealSessionMonitorPage() {
     const loadInitial = async () => {
       if (!client || !decodedPath || !sessionId) return
       try {
+        console.log('[INIT] Cargando mensajes iniciales...')
         const res = await client.getSessionMessages(decodedPath, sessionId)
         if (res.success && res.data) {
-          setMessages(res.data as SessionMessage[])
-          setLastLineIndex(res.data.length)
+          const messagesData = res.data as SessionMessage[]
+          console.log(`[INIT] Mensajes iniciales cargados: ${messagesData.length}`)
+          console.log('[INIT] Datos recibidos:', messagesData)
+          messagesData.forEach((msg, idx) => {
+            console.log(`  [INIT-MSG ${idx}] Tipo: ${msg.type}, Timestamp: "${msg.timestamp}", Tipo timestamp: ${typeof msg.timestamp}`)
+            if (msg.timestamp) {
+              const dateTest = new Date(msg.timestamp)
+              console.log(`    Fecha parseada: ${dateTest}, válida: ${!isNaN(dateTest.getTime())}`)
+            }
+          })
+          setMessages(messagesData)
+          setLastLineIndex(messagesData.length)
           setLastUpdate(new Date())
         }
       } catch (err) {
@@ -229,7 +245,19 @@ export function RealSessionMonitorPage() {
                 <p className={`text-xs mt-3 opacity-70 ${
                   msg.type === 'user' ? 'text-white' : 'text-[hsl(var(--muted-foreground))]'
                 }`}>
-                  {new Date(msg.timestamp).toLocaleTimeString()}
+                  {(() => {
+                    try {
+                      const date = new Date(msg.timestamp)
+                      if (isNaN(date.getTime())) {
+                        console.warn(`[RENDER] Invalid date para mensaje ${index}: timestamp="${msg.timestamp}", tipo: ${typeof msg.timestamp}`)
+                        return `Invalid Date (${msg.timestamp})`
+                      }
+                      return date.toLocaleTimeString()
+                    } catch (err) {
+                      console.error(`[RENDER] Error parseando timestamp en mensaje ${index}:`, err, `timestamp="${msg.timestamp}"`)
+                      return `Error (${msg.timestamp})`
+                    }
+                  })()}
                 </p>
               </div>
               {msg.type === 'user' && (
