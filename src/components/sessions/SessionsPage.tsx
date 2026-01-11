@@ -433,14 +433,14 @@ export function SessionsPage() {
                           : 'bg-[hsl(var(--secondary))]'
                       }`}
                     >
-                      <pre className="whitespace-pre-wrap font-sans text-sm break-words">
+                      <pre className="whitespace-pre-wrap font-sans text-sm break-words leading-relaxed">
                         {msg.content}
                       </pre>
                       {msg.timestamp && (
-                        <p className={`text-xs mt-2 ${
-                          msg.type === 'user' ? 'text-white/70' : 'text-[hsl(var(--muted-foreground))]'
+                        <p className={`text-xs mt-2 opacity-70 ${
+                          msg.type === 'user' ? 'text-white' : 'text-[hsl(var(--muted-foreground))]'
                         }`}>
-                          {formatRelativeTime(msg.timestamp)}
+                          {new Date(msg.timestamp).toLocaleString()}
                         </p>
                       )}
                     </div>
