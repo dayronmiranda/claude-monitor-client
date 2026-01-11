@@ -436,6 +436,19 @@ export function SessionsPage() {
                       <pre className="whitespace-pre-wrap font-sans text-sm break-words leading-relaxed">
                         {msg.content}
                       </pre>
+                      {msg.todos && msg.todos.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-opacity-30 border-white">
+                          <p className="text-xs font-semibold mb-2">📋 TODOs:</p>
+                          <ul className="text-xs space-y-1">
+                            {msg.todos.map((todo, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span>•</span>
+                                <span>{typeof todo === 'string' ? todo : JSON.stringify(todo)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                       {msg.timestamp && (
                         <p className={`text-xs mt-2 opacity-70 ${
                           msg.type === 'user' ? 'text-white' : 'text-[hsl(var(--muted-foreground))]'

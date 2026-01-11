@@ -72,6 +72,7 @@ export interface SessionMessage {
   type: 'user' | 'assistant'
   content: string
   timestamp: string
+  todos?: unknown[]
 }
 
 // Terminal (active PTY session)
