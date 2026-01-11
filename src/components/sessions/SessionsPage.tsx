@@ -13,9 +13,6 @@ import {
   Pencil,
   X,
   Check,
-  User,
-  Bot,
-  Loader2,
 } from 'lucide-react'
 import { useStore } from '@/stores/useStore'
 import { Button } from '@/components/ui/Button'
@@ -23,7 +20,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { formatBytes, formatRelativeTime } from '@/lib/utils'
-import type { Session, Project, SessionMessage } from '@/types'
+import type { Session, Project } from '@/types'
 
 export function SessionsPage() {
   const { projectPath } = useParams<{ projectPath: string }>()
@@ -37,9 +34,6 @@ export function SessionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
-  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
-  const [messages, setMessages] = useState<SessionMessage[]>([])
-  const [messagesLoading, setMessagesLoading] = useState(false)
 
   const client = getClient()
   const decodedPath = projectPath ? decodeURIComponent(projectPath) : ''
@@ -171,25 +165,8 @@ export function SessionsPage() {
     return session.id.slice(0, 8)
   }
 
-  const loadMessages = async (session: Session) => {
-    if (!client || !decodedPath) return
-    setSelectedSession(session)
-    setMessagesLoading(true)
-    try {
-      const res = await client.getSessionMessages(decodedPath, session.id)
-      if (res.success && res.data) {
-        setMessages(res.data)
-      }
-    } catch (err) {
-      console.error('Failed to load messages:', err)
-    } finally {
-      setMessagesLoading(false)
-    }
-  }
-
-  const closeMessages = () => {
-    setSelectedSession(null)
-    setMessages([])
+  const viewMessages = (session: Session) => {
+    navigate(`/projects/${projectPath}/sessions/${session.id}/messages`)
   }
 
   const emptyCount = sessions.filter((s) => s.message_count === 0).length
@@ -262,10 +239,8 @@ export function SessionsPage() {
         {sessions.map((session) => (
           <Card
             key={session.id}
-            className={`transition-all hover:bg-[hsl(var(--secondary))] cursor-pointer ${
-              selectedSession?.id === session.id ? 'ring-2 ring-[hsl(var(--primary))]' : ''
-            }`}
-            onClick={() => loadMessages(session)}
+            className="transition-all hover:bg-[hsl(var(--secondary))] cursor-pointer"
+            onClick={() => viewMessages(session)}
           >
             <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4">
               <button
@@ -383,91 +358,6 @@ export function SessionsPage() {
             <h3 className="text-lg font-medium">No sessions</h3>
           </CardContent>
         </Card>
-      )}
-
-      {/* Messages Panel */}
-      {selectedSession && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-[hsl(var(--background))] rounded-lg w-full max-w-4xl h-[80vh] flex flex-col">
-            {/* Panel Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[hsl(var(--secondary))]">
-              <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-semibold truncate">
-                  {getSessionDisplayName(selectedSession)}
-                </h2>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                  {messages.length} messages
-                </p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={closeMessages}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {/* Messages List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messagesLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--primary))]" />
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-[hsl(var(--muted-foreground))]">
-                  <MessageSquare className="h-12 w-12 mb-4" />
-                  <p>No messages in this session</p>
-                </div>
-              ) : (
-                messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`flex gap-3 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {msg.type === 'assistant' && (
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-white" />
-                      </div>
-                    )}
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        msg.type === 'user'
-                          ? 'bg-[hsl(var(--primary))] text-white'
-                          : 'bg-[hsl(var(--secondary))]'
-                      }`}
-                    >
-                      <pre className="whitespace-pre-wrap font-sans text-sm break-words leading-relaxed">
-                        {msg.content}
-                      </pre>
-                      {msg.todos && msg.todos.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-opacity-30 border-white">
-                          <p className="text-xs font-semibold mb-2">📋 TODOs:</p>
-                          <ul className="text-xs space-y-1">
-                            {msg.todos.map((todo, idx) => (
-                              <li key={idx} className="flex items-start gap-2">
-                                <span>•</span>
-                                <span>{typeof todo === 'string' ? todo : JSON.stringify(todo)}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {msg.timestamp && (
-                        <p className={`text-xs mt-2 opacity-70 ${
-                          msg.type === 'user' ? 'text-white' : 'text-[hsl(var(--muted-foreground))]'
-                        }`}>
-                          {new Date(msg.timestamp).toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                    {msg.type === 'user' && (
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[hsl(var(--secondary))] flex items-center justify-center">
-                        <User className="h-5 w-5" />
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
       )}
     </div>
   )
