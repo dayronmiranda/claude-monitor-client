@@ -71,7 +71,7 @@ export function HostsPage() {
               <div>
                 <label className="mb-1 block text-sm">URL</label>
                 <Input
-                  placeholder="http://192.168.1.100:9090"
+                  placeholder="http://192.168.1.100:9003"
                   value={formData.url}
                   onChange={(e) =>
                     setFormData({ ...formData, url: e.target.value })
