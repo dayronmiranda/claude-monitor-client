@@ -5,6 +5,7 @@ import { HostsPage } from '@/components/hosts/HostsPage'
 import { ProjectsPage } from '@/components/projects/ProjectsPage'
 import { SessionsPage } from '@/components/sessions/SessionsPage'
 import { SessionMessagesPage } from '@/components/sessions/SessionMessagesPage'
+import { RealSessionMonitorPage } from '@/components/sessions/RealSessionMonitorPage'
 import { TerminalsPage } from '@/components/terminals/TerminalsPage'
 import { TerminalView } from '@/components/terminals/TerminalView'
 import { AnalyticsPage } from '@/components/analytics/AnalyticsPage'
@@ -25,6 +26,7 @@ function App() {
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/:projectPath" element={<SessionsPage />} />
           <Route path="projects/:projectPath/sessions/:sessionId/messages" element={<SessionMessagesPage />} />
+          <Route path="projects/:projectPath/sessions/:sessionId/realtime" element={<RealSessionMonitorPage />} />
           <Route path="terminals" element={<TerminalsPage />} />
           <Route path="terminals/:terminalId" element={<TerminalView />} />
           <Route path="analytics" element={<AnalyticsPage />} />

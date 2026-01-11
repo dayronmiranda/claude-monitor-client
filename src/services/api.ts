@@ -51,6 +51,16 @@ export class APIClient {
     return response.json()
   }
 
+  // Método genérico para requests sin especificar tipo
+  async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
+    // Convertir formato "GET /api/..." a solo "/api/..."
+    let actualEndpoint = endpoint
+    if (endpoint.includes(' ')) {
+      actualEndpoint = endpoint.split(' ')[1]
+    }
+    return this.request(actualEndpoint, options)
+  }
+
   // Host
   async getHost(): Promise<APIResponse<HostInfo>> {
     return this.request('/api/host')
