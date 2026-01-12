@@ -62,6 +62,8 @@ export interface Session {
   file_path: string
   first_message: string
   message_count: number
+  user_messages: number
+  assistant_messages: number
   size_bytes: number
   created_at: string
   modified_at: string
@@ -114,6 +116,8 @@ export interface GlobalAnalytics {
   total_projects: number
   total_sessions: number
   total_messages: number
+  total_user_messages: number
+  total_assistant_messages: number
   total_size_bytes: number
   empty_sessions: number
   active_days: number
@@ -128,6 +132,8 @@ export interface ProjectSummary {
   real_path: string
   sessions: number
   messages: number
+  user_messages: number
+  assistant_messages: number
   size_bytes: number
   empty_sessions: number
   last_activity: string
@@ -138,6 +144,8 @@ export interface ProjectAnalytics {
   real_path: string
   total_sessions: number
   total_messages: number
+  total_user_messages: number
+  total_assistant_messages: number
   total_size_bytes: number
   empty_sessions: number
   daily_activity: DailyActivity[]
@@ -173,3 +181,71 @@ export interface WSMessage {
   rows?: number
   cols?: number
 }
+
+// Job (Unified work - Session + Terminal)
+export type JobState =
+  | 'created'
+  | 'starting'
+  | 'active'
+  | 'paused'
+  | 'stopped'
+  | 'archived'
+  | 'error'
+  | 'deleted'
+
+export interface JobError {
+  code: string
+  message: string
+  timestamp: string
+  retry_count: number
+}
+
+export interface Job {
+  id: string
+  session_id: string
+  project_path: string
+  real_path: string
+  name: string
+  description?: string
+  work_dir: string
+  type: 'claude' | 'terminal'
+  model?: string
+  state: JobState
+  created_at: string
+  started_at?: string
+  paused_at?: string
+  stopped_at?: string
+  archived_at?: string
+  message_count: number
+  user_messages: number
+  assistant_messages: number
+  pause_count: number
+  resume_count: number
+  pty_id?: string
+  process_id?: number
+  clients?: number
+  memory_mb?: number
+  error?: JobError
+  is_archived: boolean
+  auto_archived: boolean
+}
+
+export interface JobConfig {
+  name?: string
+  description?: string
+  work_dir: string
+  type?: 'claude' | 'terminal'
+  model?: string
+  id?: string
+}
+
+export type JobAction =
+  | 'start'
+  | 'pause'
+  | 'resume'
+  | 'stop'
+  | 'archive'
+  | 'reopen'
+  | 'delete'
+  | 'retry'
+  | 'discard'

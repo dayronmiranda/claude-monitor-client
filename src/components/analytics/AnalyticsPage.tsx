@@ -113,9 +113,23 @@ export function AnalyticsPage() {
                   <div className="rounded-lg bg-purple-500/20 p-3">
                     <MessageSquare className="h-6 w-6 text-purple-400" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="text-2xl font-bold">{analytics.total_messages.toLocaleString()}</div>
-                    <div className="text-sm text-[hsl(var(--muted-foreground))]">Messages</div>
+                    <div className="text-sm text-[hsl(var(--muted-foreground))]">Total Messages</div>
+                    <div className="mt-2 flex gap-4 text-xs">
+                      <div className="flex items-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                        <span className="font-medium text-blue-400">
+                          {analytics.total_user_messages.toLocaleString()} user
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                        <span className="text-[hsl(var(--muted-foreground))]">
+                          {analytics.total_assistant_messages.toLocaleString()} assistant
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

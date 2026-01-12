@@ -8,6 +8,8 @@ import { SessionMessagesPage } from '@/components/sessions/SessionMessagesPage'
 import { RealSessionMonitorPage } from '@/components/sessions/RealSessionMonitorPage'
 import { TerminalsPage } from '@/components/terminals/TerminalsPage'
 import { TerminalView } from '@/components/terminals/TerminalView'
+import { JobsPage } from '@/components/jobs/JobsPage'
+import { JobDetailPage } from '@/components/jobs/JobDetailPage'
 import { AnalyticsPage } from '@/components/analytics/AnalyticsPage'
 import { SettingsPage } from '@/components/settings/SettingsPage'
 import { initializeConnections } from '@/stores/useStore'
@@ -27,6 +29,8 @@ function App() {
           <Route path="projects/:projectPath" element={<SessionsPage />} />
           <Route path="projects/:projectPath/sessions/:sessionId/messages" element={<SessionMessagesPage />} />
           <Route path="projects/:projectPath/sessions/:sessionId/realtime" element={<RealSessionMonitorPage />} />
+          <Route path="jobs" element={<JobsPage />} />
+          <Route path="jobs/:jobId" element={<JobDetailPage />} />
           <Route path="terminals" element={<TerminalsPage />} />
           <Route path="terminals/:terminalId" element={<TerminalView />} />
           <Route path="analytics" element={<AnalyticsPage />} />

@@ -8,12 +8,16 @@ import {
   Play,
   Square,
   AlertCircle,
+  Check,
+  FolderOpen,
 } from 'lucide-react'
 import { useStore } from '@/stores/useStore'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
+import { Dialog } from '@/components/ui/Dialog'
+import { DirectoryBrowser } from '@/components/filesystem/DirectoryBrowser'
 import { formatRelativeTime } from '@/lib/utils'
 import type { Terminal } from '@/types'
 
@@ -25,9 +29,11 @@ export function TerminalsPage() {
   const [terminals, setTerminals] = useState<Terminal[]>([])
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showDirBrowser, setShowDirBrowser] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    work_dir: searchParams.get('workdir') ? decodeURIComponent(searchParams.get('workdir')!) : '/root',
+    work_dir: searchParams.get('workdir') ? decodeURIComponent(searchParams.get('workdir')!) : '',
     type: 'claude' as 'claude' | 'terminal',
     session_id: searchParams.get('session') || '',
     resume: searchParams.get('resume') === 'true',
@@ -113,6 +119,48 @@ export function TerminalsPage() {
     }
   }
 
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === stoppedTerminals.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(stoppedTerminals.map(t => t.id)))
+    }
+  }
+
+  const handleDeleteMultiple = async () => {
+    if (!client || selectedIds.size === 0) return
+    if (!confirm(`Delete ${selectedIds.size} terminal record(s)?`)) return
+
+    try {
+      let deleted = 0
+      for (const id of selectedIds) {
+        try {
+          await client.deleteTerminal(id)
+          deleted++
+        } catch (err) {
+          console.error(`Failed to delete terminal ${id}:`, err)
+        }
+      }
+      setSelectedIds(new Set())
+      loadTerminals()
+      if (deleted > 0) {
+        console.log(`Deleted ${deleted} terminal(s)`)
+      }
+    } catch (err) {
+      console.error('Failed to delete terminals:', err)
+    }
+  }
+
   if (!activeHost) {
     return (
       <div className="flex h-full items-center justify-center p-6">
@@ -140,9 +188,19 @@ export function TerminalsPage() {
           <h1 className="text-2xl font-bold">Terminals</h1>
           <p className="text-[hsl(var(--muted-foreground))]">
             {activeTerminals.length} active · {stoppedTerminals.length} stopped
+            {selectedIds.size > 0 && ` · ${selectedIds.size} selected`}
           </p>
         </div>
         <div className="flex gap-2">
+          {selectedIds.size > 0 && (
+            <Button
+              variant="destructive"
+              onClick={handleDeleteMultiple}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
           <Button onClick={() => setShowForm(!showForm)}>
             <Plus className="h-4 w-4" />
             New Terminal
@@ -171,11 +229,22 @@ export function TerminalsPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm">Working Directory</label>
-                <Input
-                  placeholder="/root/project"
-                  value={formData.work_dir}
-                  onChange={(e) => setFormData({ ...formData, work_dir: e.target.value })}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="/var/www/project"
+                    value={formData.work_dir}
+                    onChange={(e) => setFormData({ ...formData, work_dir: e.target.value })}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowDirBrowser(true)}
+                    title="Browse directories"
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-sm">Type</label>
@@ -269,12 +338,34 @@ export function TerminalsPage() {
       {/* Stopped Terminals */}
       {stoppedTerminals.length > 0 && (
         <div>
-          <h2 className="mb-3 text-lg font-semibold">Stopped</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Stopped</h2>
+            {stoppedTerminals.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={toggleSelectAll}
+                className="text-xs"
+              >
+                <Check className="h-4 w-4 mr-1" />
+                {selectedIds.size === stoppedTerminals.length ? 'Deselect All' : 'Select All'}
+              </Button>
+            )}
+          </div>
           <div className="space-y-2">
             {stoppedTerminals.map((terminal) => (
-              <Card key={terminal.id}>
+              <Card
+                key={terminal.id}
+                className={selectedIds.has(terminal.id) ? 'ring-2 ring-[hsl(var(--primary))]' : ''}
+              >
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(terminal.id)}
+                      onChange={() => toggleSelect(terminal.id)}
+                      className="h-4 w-4 rounded cursor-pointer"
+                    />
                     <TerminalIcon className="h-8 w-8 text-[hsl(var(--muted-foreground))]" />
                     <div>
                       <div className="font-medium">{terminal.name}</div>
@@ -321,6 +412,22 @@ export function TerminalsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Directory Browser Dialog */}
+      <Dialog
+        open={showDirBrowser}
+        onClose={() => setShowDirBrowser(false)}
+        title="Select Working Directory"
+      >
+        <DirectoryBrowser
+          initialPath={formData.work_dir || '/root'}
+          onSelect={(path) => {
+            setFormData({ ...formData, work_dir: path })
+            setShowDirBrowser(false)
+          }}
+          onCancel={() => setShowDirBrowser(false)}
+        />
+      </Dialog>
     </div>
   )
 }
