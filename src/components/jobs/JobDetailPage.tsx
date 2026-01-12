@@ -305,6 +305,18 @@ export function JobDetailPage() {
               <CardTitle>Acciones</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              {/* Ver Mensajes Button - Always Visible */}
+              {job.message_count > 0 && (
+                <Button
+                  className="w-full mb-4"
+                  variant="secondary"
+                  onClick={() => navigate(`/jobs/${job.id}/messages`)}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Ver Conversación ({job.message_count})
+                </Button>
+              )}
+
               {job.state === 'created' && (
                 <>
                   <Button

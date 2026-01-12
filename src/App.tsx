@@ -10,6 +10,7 @@ import { TerminalsPage } from '@/components/terminals/TerminalsPage'
 import { TerminalView } from '@/components/terminals/TerminalView'
 import { JobsPage } from '@/components/jobs/JobsPage'
 import { JobDetailPage } from '@/components/jobs/JobDetailPage'
+import { JobMessagesPage } from '@/components/jobs/JobMessagesPage'
 import { AnalyticsPage } from '@/components/analytics/AnalyticsPage'
 import { SettingsPage } from '@/components/settings/SettingsPage'
 import { initializeConnections } from '@/stores/useStore'
@@ -31,6 +32,7 @@ function App() {
           <Route path="projects/:projectPath/sessions/:sessionId/realtime" element={<RealSessionMonitorPage />} />
           <Route path="jobs" element={<JobsPage />} />
           <Route path="jobs/:jobId" element={<JobDetailPage />} />
+          <Route path="jobs/:jobId/messages" element={<JobMessagesPage />} />
           <Route path="terminals" element={<TerminalsPage />} />
           <Route path="terminals/:terminalId" element={<TerminalView />} />
           <Route path="analytics" element={<AnalyticsPage />} />

@@ -3,6 +3,7 @@ import {
   Server,
   FolderOpen,
   Terminal,
+  Briefcase,
   BarChart3,
   Settings,
   MonitorSmartphone,
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/Button'
 const navItems = [
   { to: '/', icon: Server, label: 'Drivers' },
   { to: '/projects', icon: FolderOpen, label: 'Projects' },
+  { to: '/jobs', icon: Briefcase, label: 'Jobs' },
   { to: '/terminals', icon: Terminal, label: 'Terminals' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/settings', icon: Settings, label: 'Settings' },
